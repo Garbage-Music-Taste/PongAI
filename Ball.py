@@ -2,12 +2,13 @@ import pygame
 
 
 class Ball:
+    max_speed = 12
+
     def __init__(self, initial_position: list[float], velocity: list[float]):
         self.position = initial_position
         self.velocity = velocity
         self.radius = 10
-        self.speed_increment = 1.05 # pong mechanics, speed up the ball (more fun ig)
-        self.max_speed = 12
+        self.speed_increment = 1.05  # pong mechanics, speed up the ball (more fun ig)
 
     def update(self):
         self.position[0] += self.velocity[0]
@@ -34,7 +35,7 @@ class Ball:
         dist = (self.position[0] - paddle_center) / (paddle.length / 2)
         self.velocity[0] += dist * 2  # tweak multiplier as needed
 
-        speed = (self.velocity[0]**2 + self.velocity[1]**2)**0.5
+        speed = (self.velocity[0] ** 2 + self.velocity[1] ** 2) ** 0.5
         if speed > self.max_speed:
             factor = self.max_speed / speed
             self.velocity[0] *= factor
