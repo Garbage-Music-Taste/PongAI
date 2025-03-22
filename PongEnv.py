@@ -23,14 +23,14 @@ class PongEnv:
 
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
+        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [2, -2])
         self.score1 = 0
         self.score2 = 0
 
     def reset(self):
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
+        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [2, -2])
         self.score1 = 0
         self.score2 = 0
         return self.get_state()
@@ -70,13 +70,13 @@ class PongEnv:
             done = True
         elif self.ball.position[1] >= HEIGHT:
             self.score2 += 1
-            reward = -1
+            reward = -5
             done = True
 
         # --- Paddle collisions ---
         if self.ball.get_rect().colliderect(self.paddle1.get_rect()) and self.ball.velocity[1] > 0:
             self.ball.paddle_bounce(self.paddle1)
-            reward += 0.1 # Incentivise hitting the damn paddle
+            reward += 1 # Incentivise hitting the damn paddle
 
         if self.ball.get_rect().colliderect(self.paddle2.get_rect()) and self.ball.velocity[1] < 0:
             self.ball.paddle_bounce(self.paddle2)
@@ -84,16 +84,20 @@ class PongEnv:
         if self.render_mode:
             self.render()
 
-        # distance-based shaping
+        reward = 0
+
+        # Base reward for keeping the ball in play
+        reward += 0.01  # Small positive reward per frame
+
+        # Encourage the paddle to stay under the ball
         paddle_center = self.paddle1.x + self.paddle1.length / 2
         ball_x = self.ball.position[0]
         distance = abs(paddle_center - ball_x)
+        max_distance = WIDTH / 2
 
-        collision_margin = self.paddle1.length / 2 + self.ball.radius
+        # Distance-based reward: higher when paddle is aligned with ball
+        reward += 0.05 * (1 - min(distance, max_distance) / max_distance)
 
-        # If paddle is outside "reachable" range, apply penalty
-        if distance > collision_margin:
-            reward -= 0.05 * ((distance - collision_margin) / WIDTH)  # normalised small penalty
 
         return self.get_state(), reward, done
 

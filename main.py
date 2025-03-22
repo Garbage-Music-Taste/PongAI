@@ -1,6 +1,7 @@
 import time
 
 import matplotlib
+import torch
 
 from PongEnv import PongEnv
 from RL.Agent import Agent
@@ -51,6 +52,7 @@ for episode in range(NUM_EPISODES):
         plt.ylabel("Total Reward")
         plt.title("Total Reward Over Time")
         plt.savefig(f"rewards_ep{episode}.png")
+        torch.save(agent.policy_net.state_dict(), "pong_model.pth")
 
 plt.ioff()
 plt.show()

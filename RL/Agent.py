@@ -18,7 +18,7 @@ class Agent:
     epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
     '''
     def __init__(self, state_dim, action_dim, buffer_capacity=10000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000000):
+                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -35,6 +35,7 @@ class Agent:
         self.replay_buffer = ReplayBuffer(capacity=buffer_capacity)
 
         self.epsilon = epsilon_start
+        self.epsilon_start = epsilon_start
         self.epsilon_end = epsilon_end
         self.epsilon_decay = epsilon_decay
         self.step_count = 0
@@ -52,9 +53,13 @@ class Agent:
                 action (int): one of [0, 1, 2]
             """
         self.step_count += 1
-        self.epsilon = self.epsilon_end + (self.epsilon - self.epsilon_end) * \
-                  np.exp(-1. * self.step_count / self.epsilon_decay)
+        #self.epsilon = self.epsilon_end + (self.epsilon - self.epsilon_end) * \
+            #      np.exp(-1. * self.step_count / self.epsilon_decay)
         # exp decay, simulated annealing kinda
+        self.epsilon = max(
+            self.epsilon_end,
+            self.epsilon_start - (self.step_count / self.epsilon_decay)
+        )
 
         if random.random() < self.epsilon:
             return random.randint(0, self.action_dim - 1)
