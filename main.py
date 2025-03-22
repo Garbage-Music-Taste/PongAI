@@ -47,9 +47,9 @@ while running:
         ball.bounce_y()
 
     if ball.get_rect().colliderect(paddle1.get_rect()) and ball.velocity[1] > 0:
-        ball.bounce_y()
+        ball.paddle_bounce(paddle1)
     if ball.get_rect().colliderect(paddle2.get_rect()) and ball.velocity[1] < 0:
-        ball.bounce_y()
+        ball.paddle_bounce(paddle2)
 
     pygame.draw.rect(screen, WHITE, paddle1.get_rect())
     pygame.draw.rect(screen, WHITE, paddle2.get_rect())
