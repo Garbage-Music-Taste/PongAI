@@ -8,12 +8,15 @@ MAX_SCORE = 10
 
 
 class PongEnv:
-    def __init__(self, render_mode=False):
+    def __init__(self, render_mode=False, episode_num=None):
         pygame.init()
         self.render_mode = render_mode
+        self.episode_num = episode_num
         if render_mode:
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
             self.clock = pygame.time.Clock()
+            pygame.font.init()
+            self.font = pygame.font.SysFont(None, 36)
 
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
@@ -103,6 +106,11 @@ class PongEnv:
         for x in range(0, WIDTH, 20):
             if (x // 20) % 2 == 0:
                 pygame.draw.line(self.screen, (255, 255, 255), (x, HEIGHT // 2), (x + 10, HEIGHT // 2))
+
+        if self.episode_num is not None:
+            text = self.font.render(f"Episode {self.episode_num}", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40))
+            self.screen.blit(text, text_rect)
 
         pygame.display.flip()
         self.clock.tick(60)

@@ -3,17 +3,18 @@ import time
 from PongEnv import PongEnv
 from RL.Agent import Agent
 
-env = PongEnv(render_mode=True)
-
 state_dim = 5
 action_dim = 3
 agent = Agent(state_dim, action_dim)
 
 NUM_EPISODES = 1000
 BATCH_SIZE = 64
-TARGET_UPDATE_EVERY = 10
+TARGET_UPDATE_EVERY = 100
 
 for episode in range(NUM_EPISODES):
+    render = (episode % TARGET_UPDATE_EVERY == 0)
+    env = PongEnv(render_mode=render, episode_num=episode if render else None)
+
     state = env.reset()
     done = False
     total_reward = 0
@@ -26,7 +27,6 @@ for episode in range(NUM_EPISODES):
         state = next_state
         total_reward += reward
 
-    # Sync target network every N episodes
     if episode % TARGET_UPDATE_EVERY == 0:
         agent.update_target()
 
