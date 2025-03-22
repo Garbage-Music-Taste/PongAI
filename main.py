@@ -19,6 +19,12 @@ paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)  # top paddle
 
 ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
 
+score1 = 0  # Bottom player (paddle1)
+score2 = 0  # Top player (paddle2)
+
+font = pygame.font.SysFont(None, 36)
+
+
 running = True
 while running:
     screen.fill(BLACK)
@@ -42,9 +48,14 @@ while running:
 
     if ball.position[0] <= 0 or ball.position[0] >= WIDTH:
         ball.bounce_x()
-    if ball.position[1] <= 0 or ball.position[1] >= HEIGHT:
-        print("Someone scored lol")
-        ball.bounce_y()
+
+    # Scoring
+    if ball.position[1] <= 0:  # Player 1 scores
+        score1 += 1
+        ball = Ball([WIDTH // 2, HEIGHT // 2], [4, 4])
+    elif ball.position[1] >= HEIGHT:  # Player 2 scores
+        score2 += 1
+        ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
 
     if ball.get_rect().colliderect(paddle1.get_rect()) and ball.velocity[1] > 0:
         ball.paddle_bounce(paddle1)
@@ -58,6 +69,9 @@ while running:
     for x in range(0, WIDTH, 20):
         if (x // 20) % 2 == 0:
             pygame.draw.line(screen, WHITE, (x, HEIGHT // 2), (x + 10, HEIGHT // 2))
+
+    score_text = font.render(f"{score2} - {score1}", True, WHITE)
+    screen.blit(score_text, (WIDTH // 2 - 30, HEIGHT // 2 + 20))
 
     pygame.display.flip()
     clock.tick(60)
