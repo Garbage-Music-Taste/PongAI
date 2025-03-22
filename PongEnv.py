@@ -33,6 +33,8 @@ class PongEnv:
         """
         Action: 0 = left, 1 = stay, 2 = right (for paddle1/agent)
         Paddle2 can be controlled by simple AI or fixed
+
+        Returns state, reward, done
         """
         # --- Paddle 1 (agent) ---
         if action == 0:
