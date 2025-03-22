@@ -18,7 +18,7 @@ class Agent:
     epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
     '''
     def __init__(self, state_dim, action_dim, buffer_capacity=10000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.1, epsilon_decay=500):
+                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -52,11 +52,11 @@ class Agent:
                 action (int): one of [0, 1, 2]
             """
         self.step_count += 1
-        epsilon = self.epsilon_end + (self.epsilon - self.epsilon_end) * \
+        self.epsilon = self.epsilon_end + (self.epsilon - self.epsilon_end) * \
                   np.exp(-1. * self.step_count / self.epsilon_decay)
         # exp decay, simulated annealing kinda
 
-        if random.random() < epsilon:
+        if random.random() < self.epsilon:
             return random.randint(0, self.action_dim - 1)
         else:
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)

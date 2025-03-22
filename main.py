@@ -1,11 +1,21 @@
 import time
 
+import matplotlib
+
 from PongEnv import PongEnv
 from RL.Agent import Agent
 
-state_dim = 5
-action_dim = 3
-agent = Agent(state_dim, action_dim)
+
+import matplotlib
+matplotlib.use('Agg')  # For headless / non-interactive plotting
+import matplotlib.pyplot as plt
+
+
+#plt.ion()
+episode_rewards = []
+
+
+agent = Agent(PongEnv.STATE_DIM, PongEnv.ACTION_DIM)
 
 NUM_EPISODES = 1000
 BATCH_SIZE = 64
@@ -30,4 +40,18 @@ for episode in range(NUM_EPISODES):
     if episode % TARGET_UPDATE_EVERY == 0:
         agent.update_target()
 
-    print(f"Episode {episode} | Total reward: {total_reward}")
+    print(f"Episode {episode} | Total reward: {total_reward} | Variability: {agent.epsilon}")
+    episode_rewards.append(total_reward)
+
+    # Plot every 50 episodes
+    if episode % 50 == 0 and episode > 0:
+        plt.clf()
+        plt.plot(episode_rewards)
+        plt.xlabel("Episode")
+        plt.ylabel("Total Reward")
+        plt.title("Total Reward Over Time")
+        plt.savefig(f"rewards_ep{episode}.png")
+
+plt.ioff()
+plt.show()
+

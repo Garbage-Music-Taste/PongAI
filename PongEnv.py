@@ -8,6 +8,9 @@ MAX_SCORE = 10
 
 
 class PongEnv:
+    STATE_DIM = 7
+    ACTION_DIM = 3
+
     def __init__(self, render_mode=False, episode_num=None):
         pygame.init()
         self.render_mode = render_mode
@@ -63,7 +66,7 @@ class PongEnv:
         # --- Scoring ---
         if self.ball.position[1] <= 0:
             self.score1 += 1
-            reward = 1
+            reward = 10
             done = True
         elif self.ball.position[1] >= HEIGHT:
             self.score2 += 1
@@ -73,22 +76,40 @@ class PongEnv:
         # --- Paddle collisions ---
         if self.ball.get_rect().colliderect(self.paddle1.get_rect()) and self.ball.velocity[1] > 0:
             self.ball.paddle_bounce(self.paddle1)
+            reward += 0.1 # Incentivise hitting the damn paddle
+
         if self.ball.get_rect().colliderect(self.paddle2.get_rect()) and self.ball.velocity[1] < 0:
             self.ball.paddle_bounce(self.paddle2)
 
         if self.render_mode:
             self.render()
 
+        # distance-based shaping
+        paddle_center = self.paddle1.x + self.paddle1.length / 2
+        ball_x = self.ball.position[0]
+        distance = abs(paddle_center - ball_x)
+
+        collision_margin = self.paddle1.length / 2 + self.ball.radius
+
+        # If paddle is outside "reachable" range, apply penalty
+        if distance > collision_margin:
+            reward -= 0.05 * ((distance - collision_margin) / WIDTH)  # normalised small penalty
+
         return self.get_state(), reward, done
 
     def get_state(self):
-        return np.array([
-            self.ball.position[0] / WIDTH,
-            self.ball.position[1] / HEIGHT,
-            self.ball.velocity[0] / Ball.max_speed,  # Normalize assuming max speed
-            self.ball.velocity[1] / Ball.max_speed,
-            self.paddle1.x / WIDTH
+        # dimension 7
+        v = np.array([
+            self.ball.position[0] / WIDTH,  # ball x
+            self.ball.position[1] / HEIGHT,  # ball y
+            self.ball.velocity[0] / Ball.max_speed,  # vx
+            self.ball.velocity[1] / Ball.max_speed,  # vy
+            self.paddle1.x / WIDTH,  # agent paddle x
+            self.paddle2.x / WIDTH,  # opponent paddle x ✅
+            (self.paddle1.x + self.paddle1.length / 2 - self.ball.position[0]) / WIDTH  # dist to ball ✅
         ], dtype=np.float32)
+        assert len(v) == PongEnv.STATE_DIM
+        return v
 
     def render(self):
         for event in pygame.event.get():
