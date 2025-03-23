@@ -23,14 +23,14 @@ class PongEnv:
 
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [2, -2])
+        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
         self.score1 = 0
         self.score2 = 0
 
     def reset(self):
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [2, -2])
+        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
         self.score1 = 0
         self.score2 = 0
         return self.get_state()
@@ -62,15 +62,25 @@ class PongEnv:
 
         reward = 0
         done = False
+        win = 0
 
+        reward += 0.01
         # --- Scoring ---
         if self.ball.position[1] <= 0:
             self.score1 += 1
-            reward = 10
+            reward += 10
+            win = 1
             done = True
         elif self.ball.position[1] >= HEIGHT:
             self.score2 += 1
-            reward = -5
+            paddle_center = self.paddle1.x + self.paddle1.length / 2
+            ball_x = self.ball.position[0]
+            distance = abs(paddle_center - ball_x)
+            max_distance = WIDTH / 2
+
+            # Quadratic penalty, more forgiving when close
+            penalty = -1 - 4 * (distance / max_distance)
+            reward += penalty
             done = True
 
         # --- Paddle collisions ---
@@ -81,25 +91,21 @@ class PongEnv:
         if self.ball.get_rect().colliderect(self.paddle2.get_rect()) and self.ball.velocity[1] < 0:
             self.ball.paddle_bounce(self.paddle2)
 
+        if hasattr(self, 'frame_count'):
+            self.frame_count += 1
+        else:
+            self.frame_count = 0
+
+        if self.frame_count >= 1100:
+            done = True
+            reward -= 0.5  # discourage aimless bouncing
+            self.frame_count = 0  # reset for next episode
+
+
         if self.render_mode:
             self.render()
 
-        reward = 0
-
-        # Base reward for keeping the ball in play
-        reward += 0.01  # Small positive reward per frame
-
-        # Encourage the paddle to stay under the ball
-        paddle_center = self.paddle1.x + self.paddle1.length / 2
-        ball_x = self.ball.position[0]
-        distance = abs(paddle_center - ball_x)
-        max_distance = WIDTH / 2
-
-        # Distance-based reward: higher when paddle is aligned with ball
-        reward += 0.05 * (1 - min(distance, max_distance) / max_distance)
-
-
-        return self.get_state(), reward, done
+        return self.get_state(), reward, done, win
 
     def get_state(self):
         # dimension 7

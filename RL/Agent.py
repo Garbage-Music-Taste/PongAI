@@ -18,7 +18,7 @@ class Agent:
     epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
     '''
     def __init__(self, state_dim, action_dim, buffer_capacity=10000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000):
+                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=300000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
