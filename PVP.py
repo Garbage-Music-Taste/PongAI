@@ -39,9 +39,15 @@ while running:
         paddle1.update(-1)
     if keys[pygame.K_RIGHT]:
         paddle1.update(1)
-    if keys[pygame.K_a]:
+
+    #if keys[pygame.K_a]:
+     #   paddle2.update(-1)
+    #if keys[pygame.K_d]:
+    #    paddle2.update(1)
+
+    if ball.position[0] < paddle2.x + paddle2.length // 2:
         paddle2.update(-1)
-    if keys[pygame.K_d]:
+    elif ball.position[0] > paddle2.x + paddle2.length // 2:
         paddle2.update(1)
 
     ball.update()

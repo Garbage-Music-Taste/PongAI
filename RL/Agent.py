@@ -17,8 +17,8 @@ class Agent:
     lr: learning rate for the optimizer
     epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
     '''
-    def __init__(self, state_dim, action_dim, buffer_capacity=10000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=300000):
+    def __init__(self, state_dim, action_dim, buffer_capacity=100000, gamma=0.99, lr=1e-3,
+                 epsilon_start=1.0, epsilon_end=0.1, epsilon_decay=1000000):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -90,10 +90,16 @@ class Agent:
 
         # max_a' Q_target(s', a')
         with torch.no_grad():
-            next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(1)
+            #next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(1)
+            next_actions = self.policy_net(next_states).argmax(dim=1, keepdim=True)
+            next_q_values = self.target_net(next_states).gather(1, next_actions)
+            # double DQN??
+
             target_q_values = rewards + self.gamma * next_q_values * (1 - dones) #literally bellman equation
 
         loss = nn.MSELoss()(current_q_values, target_q_values)
+
+        self.avg_q_value = current_q_values.mean().item()
 
         self.optimizer.zero_grad()
         loss.backward()

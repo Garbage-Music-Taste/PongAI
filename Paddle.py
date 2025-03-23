@@ -6,7 +6,7 @@ class Paddle:
         self.x, self.y = initial_position
         self.length = length
         self.height = 20
-        self.speed = 5
+        self.speed = 10
 
     def update(self, direction, step=1):
         self.x += direction * self.speed * step
