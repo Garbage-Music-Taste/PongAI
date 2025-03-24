@@ -2,6 +2,11 @@
 
 Train a simple reinforcement learning agent to play Pong using a low-dimensional state space.
 
+## 🧍‍♂️ The Opponent
+- Uses a deterministic heuristic to move the paddle.
+- Always aligns its paddle with the x-position of the ball, making it a near-perfect reflex agent (no reaction delay or error margin).
+- This creates a challenging baseline — the agent must learn to exploit ball dynamics and angles to win points.
+
 ## 🧠 State Representation
 - Ball position `(x, y)`
 - Ball velocity `(vx, vy)`
@@ -10,7 +15,6 @@ Train a simple reinforcement learning agent to play Pong using a low-dimensional
 - Distance to ball
 
 In total, a 7D Vector fed into the DQN as input for predicting action values.
-
 
 ## 🎮 Actions
 - Move paddle **up**
@@ -33,6 +37,10 @@ At each timestep:
 2. Picks an action
 3. Environment updates
 4. Agent receives reward
+
+## 📈 Results
+- After training for 5,000 episodes, the agent achieves a **>50% win rate** against the rule-based opponent.
+- Demonstrates the agent's ability to learn effective strategies and outperform a strong baseline.
 
 ## 📦 Dependencies
 - Python 3.x
