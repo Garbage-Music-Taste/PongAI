@@ -39,8 +39,17 @@ At each timestep:
 4. Agent receives reward
 
 ## 📈 Results
-- After training for 5,000 episodes, the agent achieves a **>50% win rate** against the rule-based opponent.
+- After training for 5,000 episodes, the agent achieves a **>60% win rate** against the rule-based opponent.
 - Demonstrates the agent's ability to learn effective strategies and outperform a strong baseline.
+
+### 🎮 Gameplay Example
+
+![Pong agent](eval.gif)
+
+### 📊 Training Statistics
+
+Q-learning in motion: reward shaping and policy refinement over time.
+![Statistics](progress.png)
 
 ## 📦 Dependencies
 - Python 3.x
