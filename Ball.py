@@ -2,7 +2,7 @@ import pygame
 
 
 class Ball:
-    max_speed = 12
+    max_speed = 4
 
     def __init__(self, initial_position: list[float], velocity: list[float]):
         self.position = initial_position

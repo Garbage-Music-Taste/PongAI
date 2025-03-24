@@ -7,6 +7,10 @@ Train a simple reinforcement learning agent to play Pong using a low-dimensional
 - Ball velocity `(vx, vy)`
 - Paddle 1 (agent) position
 - Paddle 2 (opponent) position
+- Distance to ball
+
+In total, a 7D Vector fed into the DQN as input for predicting action values.
+
 
 ## 🎮 Actions
 - Move paddle **up**
@@ -14,9 +18,14 @@ Train a simple reinforcement learning agent to play Pong using a low-dimensional
 - **Do nothing**
 
 ## 🎯 Rewards
-- `+1` when the agent scores
-- `-1` when the opponent scores
-- `0` otherwise
+- `+10` when the agent scores
+- `-5` when the opponent scores
+- `+1` for hitting the ball
+- `+0.01` for every live frame
+- `+0.05 * (1 - (distance/max_distance))` to incentivise lining up the paddle with the ball
+  
+It's quite complicated and not ideal, but it yields useful results in the long run.
+
 
 ## 🔁 Training Loop
 At each timestep:
@@ -28,3 +37,5 @@ At each timestep:
 ## 📦 Dependencies
 - Python 3.x
 - Pygame (for rendering, optional)
+- PyTorch
+- Matplotlib
