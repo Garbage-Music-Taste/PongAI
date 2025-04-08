@@ -48,7 +48,7 @@ class PongEnv:
         Action: 0 = left, 1 = stay, 2 = right (for paddle1/agent)
         Paddle2 can be controlled by simple AI or fixed
 
-        Returns state, reward, done
+        Returns state, reward, done, win
         """
         # --- Paddle 1 (agent) ---
         if action == 0:
@@ -70,6 +70,7 @@ class PongEnv:
 
         reward = 0
         done = False
+        win = 0
 
         # --- Scoring ---
         if self.ball.position[1] <= 0:
@@ -100,22 +101,7 @@ class PongEnv:
         if self.render_mode:
             self.render()
 
-        reward = 0
-
-        # Base reward for keeping the ball in play
-        reward += 0.01  # Small positive reward per frame
-
-        # Encourage the paddle to stay under the ball
-        paddle_center = self.paddle1.x + self.paddle1.length / 2
-        ball_x = self.ball.position[0]
-        distance = abs(paddle_center - ball_x)
-        max_distance = WIDTH / 2
-
-        # Distance-based reward: higher when paddle is aligned with ball
-        reward += 0.05 * (1 - min(distance, max_distance) / max_distance)
-
-
-        return self.get_state(), reward, done
+        return self.get_state(), reward, done, win
 
     def get_state(self):
         # dimension 7

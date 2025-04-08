@@ -3,6 +3,7 @@ import sys
 import time
 
 import matplotlib
+import numpy as np
 import torch
 
 from PongEnv import PongEnv
@@ -22,7 +23,7 @@ agent = Agent(PongEnv.STATE_DIM, PongEnv.ACTION_DIM)
 # agent.epsilon_start = 0.1  # always choose best move
 
 
-NUM_EPISODES = 7000
+NUM_EPISODES = 10000
 BATCH_SIZE = 64
 TARGET_UPDATE_EVERY = 25
 
@@ -54,7 +55,7 @@ for episode in range(0, NUM_EPISODES):
 
     while not done:
         action = agent.select_action(state)
-        next_state, reward, done = env.step(action)
+        next_state, reward, done, win = env.step(action)
         agent.store_transition(state, action, reward, next_state, done)
         agent.train_step(BATCH_SIZE)
         state = next_state
@@ -76,10 +77,22 @@ for episode in range(0, NUM_EPISODES):
     # Plot every 100 episodes
     if episode % 100 == 0 and episode > 0:
         plt.clf()
-        plt.plot(episode_rewards)
+        plt.subplot(2, 1, 1)
+        if len(episode_rewards) >= 10:
+            ma = np.convolve(episode_rewards, np.ones(10) / 10, mode='valid')
+            plt.plot(range(9, len(episode_rewards)), ma, label='10-ep reward avg')
+        plt.plot(episode_rewards, alpha=0.4, label='Reward')
+        plt.legend()
+        plt.ylabel("Reward")
+        plt.title("Training Progress")
+
+        plt.subplot(2, 1, 2)
+        plt.plot(win_rates, color='green', label='Win rate (AWR)')
+        plt.ylabel("Win Rate")
         plt.xlabel("Episode")
-        plt.ylabel("Total Reward")
-        plt.title("Total Reward Over Time")
+        plt.legend()
+
+        plt.tight_layout()
         plt.savefig(f"rewards_ep{episode}.png")
         torch.save(agent.policy_net.state_dict(), "pong_model.pth")
 

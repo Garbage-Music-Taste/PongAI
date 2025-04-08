@@ -15,10 +15,10 @@ class Agent:
     buffer_capacity: how many past experiences to remember
     gamma: the discount factor — how much future rewards matter (close to 1 = very patient)
     lr: learning rate for the optimizer
-    epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
+    epsilon_*: parameters for the exploration schedule
     '''
     def __init__(self, state_dim, action_dim, buffer_capacity=100000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=800000):
+                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000):
         self.avg_q_value = 0
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -28,9 +28,6 @@ class Agent:
         self.target_net = DQN(state_dim, action_dim)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()  # target net is fixed
-        # fanman's inner and outer, inner is the policy net (the learner/chooser)
-        # the outer is the target net which does the evaluating.
-        # idk what happens if they get switched lol, hmm
 
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
         self.replay_buffer = ReplayBuffer(capacity=buffer_capacity)
@@ -54,9 +51,7 @@ class Agent:
                 action (int): one of [0, 1, 2]
             """
         self.step_count += 1
-        #self.epsilon = self.epsilon_end + (self.epsilon - self.epsilon_end) * \
-            #      np.exp(-1. * self.step_count / self.epsilon_decay)
-        # exp decay, simulated annealing kinda
+        # Use linear decay
         self.epsilon = max(
             self.epsilon_end,
             self.epsilon_start - (self.step_count / self.epsilon_decay)
@@ -80,7 +75,7 @@ class Agent:
         batch = self.replay_buffer.sample(batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
 
-        states = torch.tensor(np.array(states), dtype=torch.float32) # flatten first
+        states = torch.tensor(np.array(states), dtype=torch.float32)
         actions = torch.tensor(actions, dtype=torch.int64).unsqueeze(1)
         rewards = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1)
         next_states = torch.tensor(np.array(next_states), dtype=torch.float32)
@@ -89,12 +84,15 @@ class Agent:
         # Q(s, a)
         current_q_values = self.policy_net(states).gather(1, actions)
 
-        # max_a' Q_target(s', a')
+        # Double DQN: select actions using policy net, evaluate with target net
         with torch.no_grad():
-            next_q_values = self.target_net(next_states).max(1)[0].unsqueeze(1)
-            target_q_values = rewards + self.gamma * next_q_values * (1 - dones) #literally bellman equation
+            next_actions = self.policy_net(next_states).argmax(dim=1, keepdim=True)
+            next_q_values = self.target_net(next_states).gather(1, next_actions)
+            target_q_values = rewards + self.gamma * next_q_values * (1 - dones)
 
         loss = nn.MSELoss()(current_q_values, target_q_values)
+
+        self.avg_q_value = current_q_values.mean().item()
 
         self.optimizer.zero_grad()
         loss.backward()
