@@ -1,3 +1,5 @@
+import select
+import sys
 import time
 
 import matplotlib
@@ -6,25 +8,45 @@ import torch
 from PongEnv import PongEnv
 from RL.Agent import Agent
 
-
 import matplotlib
+
 matplotlib.use('Agg')  # For headless / non-interactive plotting
 import matplotlib.pyplot as plt
 
-
-#plt.ion()
+# plt.ion()
 episode_rewards = []
 
-
 agent = Agent(PongEnv.STATE_DIM, PongEnv.ACTION_DIM)
+# agent.policy_net.load_state_dict(torch.load("pong_model_trained.pth"))
+# agent.policy_net.train()
+# agent.epsilon_start = 0.1  # always choose best move
 
-NUM_EPISODES = 1000
+
+NUM_EPISODES = 7000
 BATCH_SIZE = 64
-TARGET_UPDATE_EVERY = 100
+TARGET_UPDATE_EVERY = 25
 
-for episode in range(NUM_EPISODES):
-    render = (episode % TARGET_UPDATE_EVERY == 0)
-    env = PongEnv(render_mode=render, episode_num=episode if render else None)
+win_count = 0
+wins = []
+win_rates = []
+
+
+def check_user_input():
+    # Non-blocking check for "" typed in the terminal
+    if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+        line = sys.stdin.readline().strip()
+        return line.lower() == 'a'
+    return False
+
+manual_render = False
+
+for episode in range(0, NUM_EPISODES):
+    if check_user_input():
+        manual_render = not manual_render  # toggle rendering
+
+    env = PongEnv(render_mode=manual_render, episode_num=episode if manual_render else None)
+    if manual_render:
+        manual_render = not manual_render # toggle back
 
     state = env.reset()
     done = False
@@ -41,11 +63,18 @@ for episode in range(NUM_EPISODES):
     if episode % TARGET_UPDATE_EVERY == 0:
         agent.update_target()
 
-    print(f"Episode {episode} | Total reward: {total_reward} | Variability: {agent.epsilon}")
+    win_count += win
+    wins.append(win)
+
+    awr = sum(wins[-100:]) / 100 if len(wins) > 100 else win_count / (1 + episode)
+    win_rates.append(awr)
+
+    print(
+        f"Episode {episode} | Total reward: {total_reward} | Variability: {agent.epsilon} | WR: {win_count / (1 + episode)} | AWR: {awr} | Avg Q: {agent.avg_q_value:.4f}")
     episode_rewards.append(total_reward)
 
-    # Plot every 50 episodes
-    if episode % 50 == 0 and episode > 0:
+    # Plot every 100 episodes
+    if episode % 100 == 0 and episode > 0:
         plt.clf()
         plt.plot(episode_rewards)
         plt.xlabel("Episode")
@@ -56,4 +85,3 @@ for episode in range(NUM_EPISODES):
 
 plt.ioff()
 plt.show()
-

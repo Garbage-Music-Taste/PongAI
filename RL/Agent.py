@@ -17,8 +17,9 @@ class Agent:
     lr: learning rate for the optimizer
     epsilon_*: parameters for the exploration schedule (TODO: whatever, maybe make it linear later)
     '''
-    def __init__(self, state_dim, action_dim, buffer_capacity=10000, gamma=0.99, lr=1e-3,
-                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=1000000):
+    def __init__(self, state_dim, action_dim, buffer_capacity=100000, gamma=0.99, lr=1e-3,
+                 epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=800000):
+        self.avg_q_value = 0
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -97,6 +98,10 @@ class Agent:
 
         self.optimizer.zero_grad()
         loss.backward()
+        
+        # Keep gradient clipping to prevent exploding gradients
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), max_norm=1.0)
+        
         self.optimizer.step()
 
     def update_target(self):

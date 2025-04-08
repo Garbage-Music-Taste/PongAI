@@ -1,3 +1,6 @@
+import random
+
+import numpy as np
 import pygame
 import sys
 
@@ -17,7 +20,8 @@ paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
 paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)  # top paddle
 
 
-ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
+angle = (2 * random.randint(0, 1) - 1) * random.uniform(np.pi / 6, np.pi - np.pi / 6)
+ball = Ball([WIDTH // 2, HEIGHT // 2], [7 * np.cos(angle), 7 * np.sin(angle)])
 
 score1 = 0  # Bottom player (paddle1)
 score2 = 0  # Top player (paddle2)
@@ -52,10 +56,12 @@ while running:
     # Scoring
     if ball.position[1] <= 0:  # Player 1 scores
         score1 += 1
-        ball = Ball([WIDTH // 2, HEIGHT // 2], [4, 4])
+        angle = (2 * random.randint(0, 1) - 1) * random.uniform(np.pi / 6, np.pi - np.pi / 6)
+        ball = Ball([WIDTH // 2, HEIGHT // 2], [7 * np.cos(angle), 7 * np.sin(angle)])
     elif ball.position[1] >= HEIGHT:  # Player 2 scores
         score2 += 1
-        ball = Ball([WIDTH // 2, HEIGHT // 2], [4, -4])
+        angle = (2 * random.randint(0, 1) - 1) * random.uniform(np.pi / 6, np.pi - np.pi / 6)
+        ball = Ball([WIDTH // 2, HEIGHT // 2], [7 * np.cos(angle), 7 * np.sin(angle)])
 
     if ball.get_rect().colliderect(paddle1.get_rect()) and ball.velocity[1] > 0:
         ball.paddle_bounce(paddle1)
