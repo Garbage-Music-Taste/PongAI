@@ -33,8 +33,10 @@ class Ball:
 
         paddle_center = paddle.x + paddle.length / 2
         dist = (self.position[0] - paddle_center) / (paddle.length / 2)
-        self.velocity[0] += dist * 2  # tweak multiplier as needed
+        self.velocity[0] += dist * 2
+        self.velocity[1] += dist * 0.2  # add angle modification
 
+        # Calculate current speed
         speed = (self.velocity[0] ** 2 + self.velocity[1] ** 2) ** 0.5
         if speed > self.max_speed:
             factor = self.max_speed / speed

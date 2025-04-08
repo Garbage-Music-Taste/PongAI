@@ -1,3 +1,6 @@
+import math
+import random
+
 import pygame
 import numpy as np
 from Ball import Ball
@@ -8,7 +11,7 @@ MAX_SCORE = 10
 
 
 class PongEnv:
-    STATE_DIM = 7
+    STATE_DIM = 6
     ACTION_DIM = 3
 
     def __init__(self, render_mode=False, episode_num=None):
@@ -21,16 +24,21 @@ class PongEnv:
             pygame.font.init()
             self.font = pygame.font.SysFont(None, 36)
 
-        self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
-        self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [8, -8])
+        self.reset()
+
+
         self.score1 = 0
         self.score2 = 0
 
     def reset(self):
         self.paddle1 = Paddle([WIDTH // 2 - 50, HEIGHT - 30], 100)
         self.paddle2 = Paddle([WIDTH // 2 - 50, 10], 100)
-        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [8, -8])
+        if random.random() < 1:
+            angle = (2*random.randint(0,1) - 1) * random.uniform(np.pi/2 + np.pi/6, np.pi - np.pi/6)
+        else:
+            angle = (2*random.randint(0,1) - 1) * random.uniform(np.pi/6, np.pi/2 - np.pi/6)
+        self.ball = Ball([WIDTH // 2, HEIGHT // 2], [7 * np.cos(angle), 7 * np.sin(angle)])
+
         self.score1 = 0
         self.score2 = 0
         return self.get_state()
@@ -40,7 +48,7 @@ class PongEnv:
         Action: 0 = left, 1 = stay, 2 = right (for paddle1/agent)
         Paddle2 can be controlled by simple AI or fixed
 
-        Returns state, reward, done
+        Returns state, reward, done, win
         """
         # --- Paddle 1 (agent) ---
         if action == 0:
@@ -64,11 +72,10 @@ class PongEnv:
         done = False
         win = 0
 
-        reward += 0.005 * int(self.ball.velocity[1] < 0)
         # --- Scoring ---
         if self.ball.position[1] <= 0:
             self.score1 += 1
-            reward += 3
+            reward += 1
             win = 1
             done = True
         elif self.ball.position[1] >= HEIGHT:
@@ -79,14 +86,14 @@ class PongEnv:
             max_distance = WIDTH / 2
 
             # Quadratic penalty, more forgiving when close
-            penalty = -1 - 2 * (distance / max_distance)**2
+            penalty = -1
+
             reward += penalty
             done = True
 
         # --- Paddle collisions ---
         if self.ball.get_rect().colliderect(self.paddle1.get_rect()) and self.ball.velocity[1] > 0:
             self.ball.paddle_bounce(self.paddle1)
-            reward += 1  # Incentivise hitting the damn paddle
 
         if self.ball.get_rect().colliderect(self.paddle2.get_rect()) and self.ball.velocity[1] < 0:
             self.ball.paddle_bounce(self.paddle2)
@@ -97,7 +104,7 @@ class PongEnv:
         return self.get_state(), reward, done, win
 
     def get_state(self):
-        # dimension 7
+        # dimension 6
         v = np.array([
             self.ball.position[0] / WIDTH,  # ball x
             self.ball.position[1] / HEIGHT,  # ball y
@@ -105,7 +112,6 @@ class PongEnv:
             self.ball.velocity[1] / Ball.max_speed,  # vy
             self.paddle1.x / WIDTH,  # agent paddle x
             self.paddle2.x / WIDTH,  # opponent paddle x ✅
-            (self.paddle1.x + self.paddle1.length / 2 - self.ball.position[0]) / WIDTH  # dist to ball ✅
         ], dtype=np.float32)
         assert len(v) == PongEnv.STATE_DIM
         return v
